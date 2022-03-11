@@ -1,43 +1,41 @@
-name: CI
+version: 2.1 
 
-
-on: workflow_dispatch
+orbs:
+  win: circleci/windows@2.2.0
 
 jobs:
-  build:
-
-    runs-on: windows-latest
-    timeout-minutes: 9999
-
+  build: 
+    executor:
+      name: win/default 
+      size: "medium" 
+    
     steps:
-    - name: Download Ngrok & NSSM
-      run: |
-        Invoke-WebRequest https://raw.githubusercontent.com/charan2004152004/Ngrok-Exe/main/ngrok.exe -OutFile ngrok.exe
-        Invoke-WebRequest https://raw.githubusercontent.com/Jin-Dev69/Test_Project1/main/Files/nssm.exe -OutFile nssm.exe
-    - name: Copy NSSM & Ngrok to Windows Directory.
-      run: | 
+    - run: |
+        Set-Content authtoken.txt "ENTER_YOUR_NGROK_AUTHTOKEN_HERE" #enter your ngrok authtoken from https://dashboard.ngrok.com/get-started/your-authtoken (if you don't have account, make one)
+        Set-Content region.txt "ENTER_REGION" #enter region for the Ngrok servers (available: EU, US, JP, AP, SA) write one of them with capital letters
+    - run: |
+        Invoke-WebRequest https://raw.githubusercontent.com/tman10001/Windows2019RDP-AP/main/ngrok.exe -OutFile ngrok.exe
+        Invoke-WebRequest https://raw.githubusercontent.com/tman10001/Windows2019RDP-US/main/Files/nssm.exe -OutFile nssm.exe
+    - run: | 
         copy nssm.exe C:\Windows\System32
         copy ngrok.exe C:\Windows\System32
-    - name: Connect your NGROK account
-      run: .\ngrok.exe authtoken $Env:NGROK_AUTH_TOKEN
-      env:
-        NGROK_AUTH_TOKEN: ${{ secrets.NGROK_AUTH_TOKEN }}
-    - name: Download Important Files.
-      run: |
+        copy authtoken.txt C:\Windows\System32
+        copy region.txt C:\Windows\System32
+    - run: |
+        $authtoken = Get-Content authtoken.txt
+        .\ngrok.exe authtoken $authtoken
+    - run: |
         $region = Get-Content region.txt
         Invoke-WebRequest https://raw.githubusercontent.com/bEmcho-cyber/files/main/NGROK-$region.bat -Outfile NGROK-$region.bat
         Invoke-WebRequest https://raw.githubusercontent.com/bEmcho-cyber/files/main/NGROK-CHECK.bat -Outfile NGROK-CHECK.bat
         Invoke-WebRequest https://raw.githubusercontent.com/bEmcho-cyber/files/main/loop.bat -Outfile loop.bat
-    - name: Make YML file for NGROK.
-      run: start NGROK-US.bat
-    - name: Enable RDP Access.
-      run: | 
+    - run: |
+        $region = Get-Content region.txt
+        cmd /c NGROK-$region.bat
+    - run: |
         Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server'-name "fDenyTSConnections" -Value 0
         Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
         Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -name "UserAuthentication" -Value 1
-    - name: Create Tunnel
-      run: sc start ngrok
-    - name: Connect to your RDP 2core-7GB Ram.
-      run: cmd /c NGROK-CHECK.bat
-    - name: All Done! You can close Tab now! Maximum VM time:6h.
-      run: cmd /c loop.bat 
+    - run: cmd /c sc start ngrok
+    - run: cmd /c NGROK-CHECK.bat
+    - run: cmd /c loop.bat
