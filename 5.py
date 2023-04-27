@@ -1,25 +1,5 @@
+
 import requests
-from bs4 import BeautifulSoup
-
-url = "https://www.redbubble.com/sitemap/popular_fitted-mask_00000.xml"
-response = requests.get(url)
-sit the relevant information 
-    for i in range(len(product_urls)): 
-        product_url = product_urls[i] 
-        last_modified_date = last_modified_dates[i] 
-
-        product_response = requests.get(product_url) 
-        product_soup = BeautifulSoup(product_response.text, "html.parser") 
-
-        # Extract the store name 
-        store_name = product_soup.find("a", class_="ProductConfiguration__artistLink--2CvXt").text.strip() 
-
-        # Extract the product title 
-        product_title = product_soup.find("h1", class_="styles__box--2Ufmy styles__text--23E5U styles__display2--3HydH styles__display-block--3kWC4 styles__margin-none--3Ub2V styles__marginTop-xs--2KZR5").text.strip() 
-
-        # Extract all the product tags 
-        tag_list = product_soup.find("div", id="work-tags") 
-        tag_links import requests
 from bs4 import BeautifulSoup
 import time
 
